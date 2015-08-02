@@ -17,7 +17,7 @@ public class SemanticSeach {
 
     /* Set up a client to talk to the Semantics3 API using your Semantics3 API Credentials */
 
-    public static JSONObject getRequest(String productName) throws OAuthExpectationFailedException {
+    public static String getRequest(String productName) throws OAuthExpectationFailedException {
         Products products = new Products(
                 "SEM3C47E5F77DF429631B19413218D63D0C0",
                 "YzhmZmM0MTU5MGI5NmQxYzk0MGZmOGVjN2QzNzJiYTc"
@@ -31,7 +31,7 @@ public class SemanticSeach {
 
             results = products.get();
 
-            return results;
+            return results.toString();
         } catch (OAuthMessageSignerException oamse) {
             oamse.printStackTrace();
         } catch (OAuthCommunicationException oace) {
@@ -40,7 +40,7 @@ public class SemanticSeach {
             ioe.printStackTrace();
         }
 
-        return results;
+        return results.toString();
 
     }
 
