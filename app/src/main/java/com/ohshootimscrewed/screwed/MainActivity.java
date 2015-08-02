@@ -190,10 +190,20 @@ public class MainActivity extends FragmentActivity {
             try {
                 JSONObject results = new JSONObject(result);
                 JSONArray listOfPlaces = results.getJSONArray("businesses");
-                for (int x = 0; x < 20; x++) {
+                for (int x = 0; x < listOfPlaces.length(); x++) {
 
-                    String myurl = listOfPlaces.getJSONObject(x).getString("mobile_url");
-                    Log.i(listOfPlaces.getJSONObject(x).getString("name"), myurl);
+                    JSONObject obj = listOfPlaces.getJSONObject(x);
+                    String name = obj.getString("name");
+                    JSONObject location = obj.getJSONObject("location");
+                    JSONArray display_address = location.getJSONArray("display_address");
+                    String address = display_address.getString(0) + " " + display_address.getString(2);
+
+                    JSONObject coordinates = obj.getJSONObject("region").getJSONObject("center");
+
+                    double latitude = Double.parseDouble(coordinates.getString("latitude"));
+                    double longitude = Double.parseDouble(coordinates.getString("longitude"));
+                    
+                    Log.i("asdf", name + " " + address);
                 }
             } catch (JSONException j) {
                 Log.i("JSONException", j.toString());
@@ -219,12 +229,4 @@ public class MainActivity extends FragmentActivity {
         }
         return true;
     }
-
-//    protected synchronized void buildGoogleApiClient() {
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .addConnectionCallbacks(this)
-//                .addOnConnectionFailedListener(this)
-//                .addApi(LocationServices.API).build();
-//
-//    }
 }
