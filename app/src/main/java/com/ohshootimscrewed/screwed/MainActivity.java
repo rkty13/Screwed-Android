@@ -21,6 +21,12 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import android.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +51,7 @@ import java.util.Locale;
 /**
  * Created by robertkim on 8/1/15.
  */
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback{
 
     private TextView mTextView;
     private EditText mSearchInput;
@@ -69,6 +75,10 @@ public class MainActivity extends FragmentActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         if (checkPlayServices()) {
 //            buildGoogleApiClient();
@@ -229,4 +239,13 @@ public class MainActivity extends FragmentActivity {
         }
         return true;
     }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        // Add a marker in Sydney, Australia, and move the camera.
+        LatLng sydney = new LatLng(-34, 151);
+        map.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        map.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+    }
+
 }
