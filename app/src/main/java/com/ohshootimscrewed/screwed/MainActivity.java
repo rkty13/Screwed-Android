@@ -1,6 +1,10 @@
 package com.ohshootimscrewed.screwed;
 
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -14,7 +18,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import android.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
@@ -35,14 +39,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by robertkim on 8/1/15.
  */
-public class MainActivity extends FragmentActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MainActivity extends FragmentActivity {
 
     private TextView mTextView;
     private EditText mSearchInput;
@@ -58,20 +61,24 @@ public class MainActivity extends FragmentActivity implements
 
     private LocationRequest mLocationRequest;
 
+    private Location currentLocation;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         if (checkPlayServices()) {
-            buildGoogleApiClient();
-            createLocationRequest();
+//            buildGoogleApiClient();
         }
+        doLocation();
 
         mTextView = (TextView) findViewById(R.id.title_screen);
         mSearchInput = (EditText) findViewById(R.id.search_field);
 
-        final String base = "http://api.yelp.com/v2/search?";
+        final String base = "http://api.yelp.com/v2/search/?";
 
         mSearchInput.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -79,12 +86,11 @@ public class MainActivity extends FragmentActivity implements
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) &&
                         (keyCode == KeyEvent.KEYCODE_ENTER)) {
 
-                    double[] coordinates = getLocation();
-
                     String term = "term=" + mSearchInput.getText().toString();
-//                    String location = "location=" + "San+Francisco";
-                    String location = "cll=" + coordinates[0] + "," + coordinates[1];
-                    String uri = base + term + "&" + location;
+                    String location = "location=" + getCity(currentLocation);
+                    String coordinates = "cll=" + currentLocation.getLatitude() + "," + currentLocation.getLongitude();
+                    String uri = base + term + "&" + location + "&" + coordinates;
+                    Log.i("ffsasdf", uri);
                     String[] param = {uri};
                     RequestTask task = new RequestTask();
 
@@ -98,68 +104,39 @@ public class MainActivity extends FragmentActivity implements
 
     }
 
-    public double[] getLocation() {
+    public void doLocation() {
+        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                currentLocation = location;
+                //doTimeCheck();
+            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
 
-        Log.d("asdf", "fda");
-        double[] coordinates = null;
-        if (mLastLocation != null) {
-            Log.d("asdf", "asdf");
-            double latitude = mLastLocation.getLatitude();
-            double longitude = mLastLocation.getLongitude();
-            Log.d("latitude", Double.toString(latitude));
-            Log.d("longitude", Double.toString(longitude));
+            public void onProviderEnabled(String provider) {}
 
-            coordinates = new double[]{latitude, longitude};
-        }
-
-        return coordinates;
+            public void onProviderDisabled(String provider) {}
+        };
+        long minTime = 0;
+        float maxDistance = 0;
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minTime, maxDistance, locationListener);
     }
 
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(FATEST_INTERVAL);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setSmallestDisplacement(DISPLACEMENT); // 10 meters
-    }
+    public String getCity(Location l) {
+        Geocoder gcd = new Geocoder(this, Locale.getDefault());
+        String loc = null;
+        try {
+            List<Address> addresses = gcd.getFromLocation(l.getLatitude(), l.getLongitude(), 1);
+            if (addresses.size() > 0) {
+                loc = addresses.get(0).getLocality();
+            }
+            Log.i("City",loc);
+        } catch (IOException e) {}
 
-    /**
-     * Starting the location updates
-     * */
-    protected void startLocationUpdates() {
+        loc.replace(" ", "+");
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
-
-    }
-
-    /**
-     * Stopping location updates
-     */
-    protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
-    }
-
-
-    @Override
-    public void onConnected(Bundle connectedHint) {
-        startLocationUpdates();
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mLastLocation = location;
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
+        return loc;
     }
 
     public class RequestTask extends AsyncTask<String, Void, String> {
@@ -217,8 +194,6 @@ public class MainActivity extends FragmentActivity implements
 
                     String myurl = listOfPlaces.getJSONObject(x).getString("mobile_url");
                     Log.i(listOfPlaces.getJSONObject(x).getString("name"), myurl);
-//                    Uri webpage = Uri.parse(myurl);
-//                    Log.i(myurl,myurl);
                 }
             } catch (JSONException j) {
                 Log.i("JSONException", j.toString());
@@ -245,11 +220,11 @@ public class MainActivity extends FragmentActivity implements
         return true;
     }
 
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API).build();
-
-    }
+//    protected synchronized void buildGoogleApiClient() {
+//        mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .addApi(LocationServices.API).build();
+//
+//    }
 }
