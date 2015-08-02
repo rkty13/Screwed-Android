@@ -20,11 +20,10 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import android.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -51,7 +50,7 @@ import java.util.Locale;
 /**
  * Created by robertkim on 8/1/15.
  */
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback{
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private TextView mTextView;
     private EditText mSearchInput;
@@ -76,7 +75,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
