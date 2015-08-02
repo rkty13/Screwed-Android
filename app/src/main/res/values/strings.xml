@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Screwed</string>
     <string name="title_screen_text">Oh Shoot, I forgot...</string>
+    <string name="search_hint">Search</string>
 </resources>
